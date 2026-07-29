@@ -114,16 +114,6 @@ export default function Login() {
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
-        
-        <div className="credentials-helper">
-          <p><strong>Demo Credentials:</strong></p>
-          <div className="credential-row">
-            <span>Admin:</span> <code>admin@teatime.com</code> / <code>admin123</code>
-          </div>
-          <div className="credential-row">
-            <span>Employee:</span> <code>employee@teatime.com</code> / <code>employee123</code>
-          </div>
-        </div>
       </div>
 
       <style>{`
@@ -199,34 +189,6 @@ export default function Login() {
           width: 100%;
         }
 
-        .credentials-helper {
-          margin-top: 2rem;
-          padding-top: 1.5rem;
-          border-top: 1px solid var(--color-border);
-          font-size: 0.8rem;
-          color: var(--color-text-secondary);
-        }
-        
-        .credentials-helper strong {
-          color: var(--color-text);
-          display: block;
-          margin-bottom: 0.4rem;
-        }
-
-        .credential-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 0.25rem;
-        }
-
-        .credential-row code {
-          background-color: var(--color-background);
-          padding: 1px 4px;
-          border-radius: 4px;
-          font-size: 0.75rem;
-          border: 1px solid var(--color-border);
-        }
       `}</style>
     </div>
   );
