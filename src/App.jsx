@@ -6,6 +6,7 @@ import { ThemeProvider } from './context/ThemeContext';
 // Import Screens
 import Login from './screens/Login';
 import Sidebar from './components/Sidebar';
+import NotificationListener from './components/NotificationListener';
 
 // Employee Screens
 import EmployeeDashboard from './screens/employee/Dashboard';
@@ -37,6 +38,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   
   return (
     <div className="app-container">
+      <NotificationListener />
       <Sidebar />
       <main className="main-content">
         {children}
