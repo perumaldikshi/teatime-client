@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { Plus, Edit2, Check, X, ShieldAlert } from 'lucide-react';
+import { Plus, Edit2, Check, X, ShieldAlert, Trash2 } from 'lucide-react';
 
 export default function TeaMaster() {
   const [items, setItems] = useState([]);
@@ -23,6 +23,20 @@ export default function TeaMaster() {
       alert(err.message || 'Failed to fetch tea items.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteItem = async (itemId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this beverage item? This will remove it from the menu catalog.')) {
+      return;
+    }
+
+    try {
+      const res = await api.delete(`/tea-items/${itemId}`);
+      alert(res.data.message || 'Beverage deleted successfully.');
+      fetchItems();
+    } catch (err) {
+      alert(err.message || 'Failed to delete beverage item.');
     }
   };
 
@@ -116,14 +130,22 @@ export default function TeaMaster() {
                   <h3 className="beverage-title-admin" style={{ marginTop: '1.25rem' }}>{item.name}</h3>
                   <p className="beverage-price-admin">₹{Number(item.price).toFixed(2)}</p>
 
-                  <div className="beverage-actions-admin" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--color-border)', paddingTop: '1rem' }}>
+                  <div className="beverage-actions-admin" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--color-border)', paddingTop: '1rem', display: 'flex', gap: '0.5rem' }}>
                     <button 
-                      className="btn btn-secondary w-full"
+                      className="btn btn-secondary"
                       onClick={() => handleOpenEdit(item)}
-                      style={{ padding: '0.5rem 1rem' }}
+                      style={{ padding: '0.5rem 1rem', flex: 1 }}
                     >
                       <Edit2 size={14} />
-                      Edit Beverage
+                      Edit
+                    </button>
+                    <button 
+                      className="btn btn-danger-outline"
+                      onClick={() => handleDeleteItem(item.id)}
+                      style={{ padding: '0.5rem 1rem', flex: 1 }}
+                    >
+                      <Trash2 size={14} />
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -223,6 +245,23 @@ export default function TeaMaster() {
           color: var(--color-primary);
           font-family: var(--font-display);
           margin-top: 0.25rem;
+        }
+
+        .btn-danger-outline {
+          background-color: transparent;
+          border: 1px solid var(--color-error);
+          color: var(--color-error);
+          border-radius: var(--radius-sm);
+          cursor: pointer;
+          transition: all var(--transition-fast);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.25rem;
+        }
+
+        .btn-danger-outline:hover {
+          background-color: var(--color-error-bg);
         }
       `}</style>
     </div>

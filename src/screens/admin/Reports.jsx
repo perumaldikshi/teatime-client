@@ -37,6 +37,28 @@ export default function Reports() {
     window.open(url, '_blank');
   };
 
+  const getBeverageEmoji = (name) => {
+    if (!name) return '🥛';
+    const n = name.toLowerCase();
+    if (n.includes('green') || n.includes('lemon') || n.includes('tea')) return '🍵';
+    if (n.includes('coffee')) return '☕';
+    return '🥛';
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this order record? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const res = await api.delete(`/order/${orderId}`);
+      alert(res.data.message || 'Order record removed.');
+      fetchReportSummary();
+    } catch (err) {
+      alert(err.message || 'Failed to delete order record.');
+    }
+  };
+
   return (
     <div className="reports-view">
       <header className="page-header">
@@ -99,6 +121,63 @@ export default function Reports() {
               <h4 style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-text)' }}>
                 {reportData?.dateRange?.startDate} to {reportData?.dateRange?.endDate}
               </h4>
+            </div>
+          </div>
+
+          {/* Report Order List Table */}
+          <div className="card grid-colspan-3 report-table-card" style={{ padding: '2rem', marginTop: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Order Records List</h3>
+            
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Employee Name</th>
+                    <th>Department</th>
+                    <th>Beverage</th>
+                    <th>Quantity</th>
+                    <th>Amount</th>
+                    <th style={{ textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportData?.orders && reportData.orders.length > 0 ? (
+                    reportData.orders.map((order) => (
+                      <tr key={order.id}>
+                        <td style={{ fontWeight: 600 }}>
+                          {order.order_date || new Date(order.created_at).toLocaleDateString()}
+                        </td>
+                        <td>{order.employee_name || 'System User'}</td>
+                        <td>{order.department || 'N/A'}</td>
+                        <td>
+                          <span style={{ marginRight: '0.5rem' }}>{getBeverageEmoji(order.tea_name)}</span>
+                          {order.tea_name}
+                        </td>
+                        <td style={{ fontWeight: 600 }}>{order.quantity}</td>
+                        <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
+                          ₹{Number(order.amount).toFixed(2)}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button 
+                            className="btn btn-danger-outline btn-sm"
+                            onClick={() => handleDeleteOrder(order.id)}
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="no-data" style={{ textAlign: 'center', padding: '2rem' }}>
+                        No order records found for this period.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -302,8 +381,32 @@ export default function Reports() {
           background-color: hsl(142, 60%, 35%);
         }
 
+        .report-table-card {
+          grid-column: span 3;
+          background-color: var(--color-surface);
+          border: 1px solid var(--color-border);
+          box-shadow: var(--shadow-md);
+        }
+
+        .btn-danger-outline {
+          background-color: transparent;
+          border: 1px solid var(--color-error);
+          color: var(--color-error);
+          border-radius: var(--radius-sm);
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        .btn-danger-outline:hover {
+          background-color: var(--color-error-bg);
+        }
+
         @media (max-width: 900px) {
           .exporters-section-card {
+            grid-column: span 1;
+          }
+
+          .report-table-card {
             grid-column: span 1;
           }
 
