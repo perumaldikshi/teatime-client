@@ -52,7 +52,9 @@ export default function AdminDashboard() {
   const isOpen = orderingWindow?.isOpen;
 
   const getBeverageEmoji = (name) => {
+    if (!name) return '🥛';
     const n = name.toLowerCase();
+    if (n.includes('biscuit') || n.includes('cookie')) return '🍪';
     if (n.includes('green') || n.includes('lemon') || n.includes('tea')) return '🍵';
     if (n.includes('coffee')) return '☕';
     return '🥛';
