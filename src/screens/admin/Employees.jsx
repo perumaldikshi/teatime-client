@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { Search, Plus, Edit2, ShieldAlert, Check, X, Shield } from 'lucide-react';
+import { Search, Plus, Edit2, ShieldAlert, Check, X, Shield, Trash2 } from 'lucide-react';
 
 export default function Employees() {
   const [employees, setEmployees] = useState([]);
@@ -22,13 +22,27 @@ export default function Employees() {
   const fetchEmployees = async () => {
     try {
       const res = await api.get('/employees', {
-        params: { search: search || undefined }
+        params: { search }
       });
       setEmployees(res.data.employees);
     } catch (err) {
-      alert(err.message || 'Failed to query employees database.');
+      alert(err.message || 'Failed to fetch employee directories.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteEmployee = async (empId, empName) => {
+    if (!window.confirm(`Are you sure you want to permanently delete the employee account for "${empName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const res = await api.delete(`/employees/${empId}`);
+      alert(res.data.message || 'Employee account removed.');
+      fetchEmployees();
+    } catch (err) {
+      alert(err.message || 'Failed to delete employee account.');
     }
   };
 
@@ -175,7 +189,7 @@ export default function Employees() {
                       </span>
                     </td>
                     <td>
-                      <div className="actions-cell flex-between" style={{ justifyContent: 'flex-end', gap: '0.75rem' }}>
+                      <div className="actions-cell flex-between" style={{ justifyContent: 'flex-end', gap: '0.5rem' }}>
                         <button 
                           className="btn btn-secondary btn-icon-sm" 
                           onClick={() => handleOpenEditModal(emp)}
@@ -189,6 +203,13 @@ export default function Employees() {
                           title={emp.is_active ? 'Suspend account' : 'Activate account'}
                         >
                           {emp.is_active ? <X size={14} /> : <Check size={14} />}
+                        </button>
+                        <button 
+                          className="btn btn-danger-outline btn-icon-sm" 
+                          onClick={() => handleDeleteEmployee(emp.id, emp.name)}
+                          title="Delete employee account"
+                        >
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
