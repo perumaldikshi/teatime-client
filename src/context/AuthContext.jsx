@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '../services/api';
 
 const AuthContext = createContext();
 
@@ -20,6 +21,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    if (user && user.role === 'admin') {
+      api.post('/auth/logout-all').catch((err) => {
+        console.error('Failed to log out all devices on server:', err);
+      });
+    }
     localStorage.removeItem('user_token');
     localStorage.removeItem('user_data');
     setToken(null);
