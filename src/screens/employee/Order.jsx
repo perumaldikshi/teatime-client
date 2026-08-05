@@ -7,6 +7,7 @@ export default function Order() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [sugarPreference, setSugarPreference] = useState('with_sugar');
   const quantity = 1;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -31,6 +32,12 @@ export default function Order() {
     fetchItems();
   }, []);
 
+  // Reset sugar preference when switching items
+  const handleSelectItem = (item) => {
+    setSelectedItem(item);
+    setSugarPreference('with_sugar');
+  };
+
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
@@ -41,10 +48,15 @@ export default function Order() {
 
     setSubmitting(true);
     try {
-      const response = await api.post('/order', {
+      const orderPayload = {
         teaItemId: selectedItem.id,
         quantity: quantity
-      });
+      };
+      // Include sugar_preference only for drink items
+      if (selectedItem.item_type === 'drink') {
+        orderPayload.sugar_preference = sugarPreference;
+      }
+      const response = await api.post('/order', orderPayload);
       alert(response.data.message);
       navigate('/');
     } catch (err) {
@@ -112,7 +124,7 @@ export default function Order() {
                   <div
                     key={item.id}
                     className={`menu-item-row card ${isSelected ? 'selected' : ''}`}
-                    onClick={() => isWindowOpen && setSelectedItem(item)}
+                    onClick={() => isWindowOpen && handleSelectItem(item)}
                     style={{ cursor: isWindowOpen ? 'pointer' : 'not-allowed' }}
                   >
                     <div className="flex-between">
@@ -177,6 +189,31 @@ export default function Order() {
                     * Quantity is read-only (1 per order)
                   </span>
                 </div>
+
+                {/* Sugar Preference - only for drink items */}
+                {selectedItem?.item_type === 'drink' && (
+                  <div className="sugar-pref-container">
+                    <label className="sugar-pref-label">Sugar Preference</label>
+                    <div className="sugar-toggle-group">
+                      <button
+                        type="button"
+                        className={`sugar-btn ${sugarPreference === 'with_sugar' ? 'sugar-active sugar-with' : ''}`}
+                        onClick={() => setSugarPreference('with_sugar')}
+                        disabled={!isWindowOpen}
+                      >
+                        🍬 With Sugar
+                      </button>
+                      <button
+                        type="button"
+                        className={`sugar-btn ${sugarPreference === 'without_sugar' ? 'sugar-active sugar-without' : ''}`}
+                        onClick={() => setSugarPreference('without_sugar')}
+                        disabled={!isWindowOpen}
+                      >
+                        🚫 Without Sugar
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <button
                   type="submit"
@@ -375,6 +412,64 @@ export default function Order() {
         .order-submit-btn {
           height: 52px;
           border-radius: var(--radius-sm);
+        }
+
+        .sugar-pref-container {
+          margin-top: 1.75rem;
+        }
+
+        .sugar-pref-label {
+          display: block;
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: var(--color-text-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.75rem;
+        }
+
+        .sugar-toggle-group {
+          display: flex;
+          gap: 0.75rem;
+        }
+
+        .sugar-btn {
+          flex: 1;
+          padding: 0.75rem 1rem;
+          border-radius: 999px;
+          border: 2px solid var(--color-border);
+          background-color: var(--color-surface);
+          color: var(--color-text-secondary);
+          font-size: 0.9rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.4rem;
+        }
+
+        .sugar-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .sugar-btn:hover:not(.sugar-active):not(:disabled) {
+          border-color: var(--color-text-secondary);
+          background-color: var(--color-background);
+        }
+
+        .sugar-active.sugar-with {
+          border-color: hsl(142, 70%, 42%);
+          background-color: hsla(142, 70%, 42%, 0.10);
+          color: hsl(142, 60%, 35%);
+        }
+
+        .sugar-active.sugar-without {
+          border-color: hsl(0, 70%, 55%);
+          background-color: hsla(0, 70%, 55%, 0.08);
+          color: hsl(0, 60%, 45%);
         }
       `}</style>
     </div>

@@ -111,6 +111,7 @@ export default function History() {
                 {isAdmin && <th>Employee</th>}
                 {isAdmin && <th>Department</th>}
                 <th>Beverage</th>
+                <th>Sugar</th>
                 <th>Quantity</th>
                 {isAdmin && <th>Amount</th>}
                 <th>Status</th>
@@ -127,6 +128,15 @@ export default function History() {
                       <span style={{ marginRight: '0.5rem' }}>{getBeverageEmoji(order.tea_name)}</span>
                       {order.tea_name}
                     </td>
+                    <td>
+                      {order.item_type === 'drink' ? (
+                        <span className={`badge sugar-history-badge ${order.sugar_preference === 'with_sugar' ? 'sugar-with-badge' : 'sugar-without-badge'}`}>
+                          {order.sugar_preference === 'with_sugar' ? '🍬 With Sugar' : '🚫 No Sugar'}
+                        </span>
+                      ) : (
+                        <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>—</span>
+                      )}
+                    </td>
                     <td style={{ fontWeight: 600 }}>{order.quantity}</td>
                     {isAdmin && (
                       <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
@@ -142,7 +152,7 @@ export default function History() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={isAdmin ? 7 : 4} className="no-data">
+                  <td colSpan={isAdmin ? 8 : 5} className="no-data">
                     No order records found matching the criteria.
                   </td>
                 </tr>
@@ -238,6 +248,25 @@ export default function History() {
           color: var(--color-text-secondary);
           padding: 3rem 0;
           font-weight: 500;
+        }
+
+        .sugar-history-badge {
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 0.2rem 0.55rem;
+          border-radius: 999px;
+        }
+
+        .sugar-with-badge {
+          background-color: hsla(142, 70%, 42%, 0.10);
+          color: hsl(142, 60%, 35%);
+          border: 1px solid hsla(142, 70%, 42%, 0.25);
+        }
+
+        .sugar-without-badge {
+          background-color: hsla(0, 70%, 55%, 0.08);
+          color: hsl(0, 60%, 45%);
+          border: 1px solid hsla(0, 70%, 55%, 0.20);
         }
 
         .pagination-info {

@@ -14,6 +14,7 @@ export default function TeaMaster() {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [isAvailable, setIsAvailable] = useState(true);
+  const [itemType, setItemType] = useState('drink');
 
   const fetchItems = async () => {
     try {
@@ -49,6 +50,7 @@ export default function TeaMaster() {
     setName('');
     setPrice('');
     setIsAvailable(true);
+    setItemType('drink');
     setModalVisible(true);
   };
 
@@ -57,6 +59,7 @@ export default function TeaMaster() {
     setName(item.name);
     setPrice(item.price.toString());
     setIsAvailable(item.is_available);
+    setItemType(item.item_type || 'drink');
     setModalVisible(true);
   };
 
@@ -72,14 +75,16 @@ export default function TeaMaster() {
         await api.put(`/tea-items/${editingItem.id}`, {
           name,
           price: Number(price),
-          is_available: isAvailable
+          is_available: isAvailable,
+          item_type: itemType
         });
         alert('Beverage updated successfully.');
       } else {
         await api.post('/tea-items', {
           name,
           price: Number(price),
-          is_available: isAvailable
+          is_available: isAvailable,
+          item_type: itemType
         });
         alert('Beverage item created successfully.');
       }
@@ -124,9 +129,14 @@ export default function TeaMaster() {
                 <div key={item.id} className="card item-card-admin">
                   <div className="card-top flex-between">
                     <span className="beverage-emoji-admin">{getBeverageEmoji(item.name)}</span>
-                    <span className={`badge ${item.is_available ? 'badge-success' : 'badge-error'}`}>
-                      {item.is_available ? 'Available' : 'Unavailable'}
-                    </span>
+                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                      <span className={`badge ${item.item_type === 'snack' ? 'badge-warning' : 'badge-info'}`} style={{ fontSize: '0.65rem' }}>
+                        {item.item_type === 'snack' ? '🍪 Snack' : '🍵 Drink'}
+                      </span>
+                      <span className={`badge ${item.is_available ? 'badge-success' : 'badge-error'}`}>
+                        {item.is_available ? 'Available' : 'Unavailable'}
+                      </span>
+                    </div>
                   </div>
 
                   <h3 className="beverage-title-admin" style={{ marginTop: '1.25rem' }}>{item.name}</h3>
@@ -199,6 +209,29 @@ export default function TeaMaster() {
                 />
               </div>
 
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Item Type *</label>
+                <div className="type-toggle-group">
+                  <button
+                    type="button"
+                    className={`type-toggle-btn ${itemType === 'drink' ? 'active' : ''}`}
+                    onClick={() => setItemType('drink')}
+                  >
+                    🍵 Drink
+                  </button>
+                  <button
+                    type="button"
+                    className={`type-toggle-btn ${itemType === 'snack' ? 'active' : ''}`}
+                    onClick={() => setItemType('snack')}
+                  >
+                    🍪 Snack
+                  </button>
+                </div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.4rem', display: 'block' }}>
+                  {itemType === 'drink' ? '* Drink items will show Sugar preference during ordering' : '* Snack items skip sugar preference'}
+                </span>
+              </div>
+
               <div className="form-group flex-between" style={{ flexDirection: 'row', padding: '0.5rem 0' }}>
                 <label htmlFor="bev-available" style={{ cursor: 'pointer' }}>Available on Daily Menu</label>
                 <label className="switch-toggle">
@@ -264,6 +297,48 @@ export default function TeaMaster() {
 
         .btn-danger-outline:hover {
           background-color: var(--color-error-bg);
+        }
+
+        .type-toggle-group {
+          display: flex;
+          gap: 0.5rem;
+          margin-top: 0.25rem;
+        }
+
+        .type-toggle-btn {
+          flex: 1;
+          padding: 0.6rem 1rem;
+          border-radius: var(--radius-sm);
+          border: 2px solid var(--color-border);
+          background-color: var(--color-surface);
+          color: var(--color-text-secondary);
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all var(--transition-fast);
+        }
+
+        .type-toggle-btn.active {
+          border-color: var(--color-primary);
+          background-color: var(--color-primary-light);
+          color: var(--color-primary);
+        }
+
+        .type-toggle-btn:hover:not(.active) {
+          border-color: var(--color-text-secondary);
+          background-color: var(--color-background);
+        }
+
+        .badge-warning {
+          background-color: hsla(38, 92%, 50%, 0.12);
+          color: hsl(38, 80%, 40%);
+          border: 1px solid hsla(38, 92%, 50%, 0.25);
+        }
+
+        .badge-info {
+          background-color: hsla(210, 80%, 50%, 0.10);
+          color: hsl(210, 70%, 45%);
+          border: 1px solid hsla(210, 80%, 50%, 0.20);
         }
       `}</style>
     </div>
