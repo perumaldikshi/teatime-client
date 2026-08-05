@@ -4,7 +4,7 @@ import api from '../../services/api';
 import { ArrowLeft, Save, Clock, Unlock, Lock, RotateCcw } from 'lucide-react';
 
 export default function TimeSettings() {
-  const [teaTimeStart, setTeaTimeStart] = useState('16:55');
+  const [teaTimeStart, setTeaTimeStart] = useState('16:30');
   const [cutoffTime, setCutoffTime] = useState('17:10');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -23,7 +23,7 @@ export default function TimeSettings() {
       try {
         const res = await api.get('/dashboard');
         if (res.data.orderingWindow) {
-          setTeaTimeStart(res.data.orderingWindow.teaTimeStart || '16:55');
+          setTeaTimeStart(res.data.orderingWindow.teaTimeStart || '16:30');
           setCutoffTime(res.data.orderingWindow.cutoffTime || '17:10');
           setOverride(res.data.orderingWindow.override || null);
         }
