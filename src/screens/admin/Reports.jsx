@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { FileText, Download, BarChart2, TrendingUp, Calendar, ShoppingBag, Search } from 'lucide-react';
+import { FileText, Download, BarChart2, TrendingUp, Calendar, ShoppingBag, Search, Candy, Ban } from 'lucide-react';
 
 // Today's date in YYYY-MM-DD
 const todayStr = () => new Date().toISOString().split('T')[0];
@@ -199,6 +199,43 @@ export default function Reports() {
             </div>
           </div>
 
+          {/* Sugar Summary Cards */}
+          <div className="card stats-summary-card sugar-with-card">
+            <div className="card-icon-round" style={{ backgroundColor: 'hsla(142,70%,42%,0.12)', color: 'hsl(142,60%,35%)' }}>
+              <span style={{ fontSize: '1.4rem' }}>🍬</span>
+            </div>
+            <div>
+              <p className="stat-label">With Sugar</p>
+              <h3 className="stat-value" style={{ color: 'hsl(142,60%,35%)' }}>
+                {reportData?.sugarSummary?.withSugar ?? 0} cups
+              </h3>
+            </div>
+          </div>
+
+          <div className="card stats-summary-card sugar-without-card">
+            <div className="card-icon-round" style={{ backgroundColor: 'hsla(0,70%,55%,0.10)', color: 'hsl(0,60%,45%)' }}>
+              <span style={{ fontSize: '1.4rem' }}>🚫</span>
+            </div>
+            <div>
+              <p className="stat-label">Without Sugar</p>
+              <h3 className="stat-value" style={{ color: 'hsl(0,60%,45%)' }}>
+                {reportData?.sugarSummary?.withoutSugar ?? 0} cups
+              </h3>
+            </div>
+          </div>
+
+          <div className="card stats-summary-card">
+            <div className="card-icon-round" style={{ backgroundColor: 'hsla(260,70%,55%,0.10)', color: 'hsl(260,60%,50%)' }}>
+              <BarChart2 size={24} />
+            </div>
+            <div>
+              <p className="stat-label">Sugar Tracked Total</p>
+              <h3 className="stat-value" style={{ color: 'hsl(260,60%,50%)' }}>
+                {reportData?.sugarSummary?.total ?? 0} drinks
+              </h3>
+            </div>
+          </div>
+
           {/* Report Order List Table */}
           <div className="card grid-colspan-3 report-table-card" style={{ padding: '2rem', marginTop: '1.5rem' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Order Records List</h3>
@@ -211,6 +248,7 @@ export default function Reports() {
                     <th>Employee Name</th>
                     <th>Department</th>
                     <th>Beverage</th>
+                    <th>Sugar</th>
                     <th>Quantity</th>
                     <th>Amount</th>
                     <th style={{ textAlign: 'center' }}>Actions</th>
@@ -229,6 +267,15 @@ export default function Reports() {
                           <span style={{ marginRight: '0.5rem' }}>{getBeverageEmoji(order.tea_name)}</span>
                           {order.tea_name}
                         </td>
+                        <td>
+                          {order.item_type === 'drink' ? (
+                            <span className={`badge rpt-sugar-badge ${order.sugar_preference === 'with_sugar' ? 'rpt-sugar-with' : 'rpt-sugar-without'}`}>
+                              {order.sugar_preference === 'with_sugar' ? '🍬 With' : '🚫 No Sugar'}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>—</span>
+                          )}
+                        </td>
                         <td style={{ fontWeight: 600 }}>{order.quantity}</td>
                         <td style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
                           ₹{Number(order.amount).toFixed(2)}
@@ -246,7 +293,7 @@ export default function Reports() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="no-data" style={{ textAlign: 'center', padding: '2rem' }}>
+                      <td colSpan={8} className="no-data" style={{ textAlign: 'center', padding: '2rem' }}>
                         No order records found for this period.
                       </td>
                     </tr>
@@ -255,6 +302,52 @@ export default function Reports() {
               </table>
             </div>
           </div>
+
+          {/* Sugar Breakdown per Beverage Panel */}
+          {reportData?.beverageSummary && reportData.beverageSummary.some(b => b.item_type === 'drink') && (
+            <div className="card grid-colspan-3 sugar-breakdown-card" style={{ padding: '2rem', marginTop: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1.25rem' }}>☕ Sugar Preference Breakdown by Beverage</h3>
+              <div className="sugar-breakdown-grid">
+                {reportData.beverageSummary
+                  .filter(b => b.item_type === 'drink')
+                  .map((bev) => {
+                    const drinkTotal = bev.with_sugar + bev.without_sugar;
+                    const withPct = drinkTotal > 0 ? Math.round((bev.with_sugar / drinkTotal) * 100) : 0;
+                    const withoutPct = drinkTotal > 0 ? 100 - withPct : 0;
+                    return (
+                      <div key={bev.tea_name} className="sugar-bev-row">
+                        <div className="sugar-bev-header">
+                          <span className="sugar-bev-name">{getBeverageEmoji(bev.tea_name)} {bev.tea_name}</span>
+                          <span className="sugar-bev-total">{drinkTotal} tracked</span>
+                        </div>
+                        {drinkTotal > 0 ? (
+                          <>
+                            <div className="sugar-progress-bar">
+                              <div
+                                className="sugar-bar-with"
+                                style={{ width: `${withPct}%` }}
+                                title={`With Sugar: ${bev.with_sugar}`}
+                              />
+                              <div
+                                className="sugar-bar-without"
+                                style={{ width: `${withoutPct}%` }}
+                                title={`Without Sugar: ${bev.without_sugar}`}
+                              />
+                            </div>
+                            <div className="sugar-bar-legend">
+                              <span className="legend-with">🍬 With Sugar: <strong>{bev.with_sugar}</strong> ({withPct}%)</span>
+                              <span className="legend-without">🚫 No Sugar: <strong>{bev.without_sugar}</strong> ({withoutPct}%)</span>
+                            </div>
+                          </>
+                        ) : (
+                          <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginTop: '0.4rem' }}>No sugar data recorded yet</p>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
 
           {/* Exporters Panel */}
           <div className="card grid-colspan-3 exporters-section-card" style={{ padding: '2rem', marginTop: '2rem' }}>
@@ -466,6 +559,95 @@ export default function Reports() {
           transition: all var(--transition-fast);
         }
         .btn-danger-outline:hover { background-color: var(--color-error-bg); }
+
+        /* Sugar CSS */
+        .rpt-sugar-badge {
+          font-size: 0.72rem;
+          font-weight: 700;
+          padding: 0.2rem 0.55rem;
+          border-radius: 999px;
+        }
+
+        .rpt-sugar-with {
+          background-color: hsla(142, 70%, 42%, 0.10);
+          color: hsl(142, 60%, 35%);
+          border: 1px solid hsla(142, 70%, 42%, 0.25);
+        }
+
+        .rpt-sugar-without {
+          background-color: hsla(0, 70%, 55%, 0.08);
+          color: hsl(0, 60%, 45%);
+          border: 1px solid hsla(0, 70%, 55%, 0.20);
+        }
+
+        .sugar-breakdown-card {
+          background-color: var(--color-surface);
+          border: 1px solid var(--color-border);
+          box-shadow: var(--shadow-md);
+        }
+
+        .sugar-breakdown-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .sugar-bev-row {
+          background-color: var(--color-background);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          padding: 1rem;
+        }
+
+        .sugar-bev-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.75rem;
+        }
+
+        .sugar-bev-name {
+          font-weight: 700;
+          font-size: 0.95rem;
+        }
+
+        .sugar-bev-total {
+          font-size: 0.75rem;
+          color: var(--color-text-secondary);
+          font-weight: 600;
+          background-color: var(--color-surface);
+          padding: 0.15rem 0.4rem;
+          border-radius: 4px;
+        }
+
+        .sugar-progress-bar {
+          height: 8px;
+          display: flex;
+          border-radius: 4px;
+          overflow: hidden;
+          background-color: var(--color-border);
+          margin-bottom: 0.5rem;
+        }
+
+        .sugar-bar-with {
+          background-color: hsl(142, 60%, 45%);
+          transition: width 0.3s ease;
+        }
+
+        .sugar-bar-without {
+          background-color: hsl(0, 60%, 55%);
+          transition: width 0.3s ease;
+        }
+
+        .sugar-bar-legend {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.75rem;
+        }
+
+        .legend-with { color: hsl(142, 60%, 35%); }
+        .legend-without { color: hsl(0, 60%, 45%); }
+
 
         @media (max-width: 900px) {
           .exporters-section-card, .report-table-card { grid-column: span 1; }
