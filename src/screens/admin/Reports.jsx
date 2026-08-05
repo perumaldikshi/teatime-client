@@ -1,20 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { FileText, Download, BarChart2, TrendingUp, Calendar, ShoppingBag } from 'lucide-react';
+import { FileText, Download, BarChart2, TrendingUp, Calendar, ShoppingBag, Search } from 'lucide-react';
+
+// Today's date in YYYY-MM-DD
+const todayStr = () => new Date().toISOString().split('T')[0];
+
+// First day of current month
+const firstOfMonth = () => {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+};
 
 export default function Reports() {
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState(null);
-  const [reportType, setReportType] = useState('daily'); // 'daily', 'weekly', 'monthly', 'yearly'
-  
+  const [reportType, setReportType] = useState('monthly');
+
+  // Custom date range
+  const [fromDate, setFromDate] = useState(firstOfMonth());
+  const [toDate, setToDate] = useState(todayStr());
+
+  // Build query params based on current mode
+  const buildParams = (type = reportType, from = fromDate, to = toDate) => {
+    if (type === 'custom') {
+      return { startDate: from, endDate: to };
+    }
+    return { reportType: type };
+  };
+
   const fetchReportSummary = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/reports', {
-        params: { reportType }
-      });
+      const res = await api.get('/reports', { params: buildParams() });
       setReportData(res.data);
     } catch (err) {
       alert(err.message || 'Failed to fetch report summary details.');
@@ -24,18 +43,34 @@ export default function Reports() {
   };
 
   useEffect(() => {
-    fetchReportSummary();
+    if (reportType !== 'custom') {
+      fetchReportSummary();
+    }
   }, [reportType]);
 
-  const handleDownloadPDF = () => {
-    const url = `${api.defaults.baseURL}/download-pdf?reportType=${reportType}&Authorization=Bearer ${token}`;
-    window.open(url, '_blank');
+  // For custom range — fetch only on Apply click
+  const handleApplyCustom = () => {
+    if (!fromDate || !toDate) {
+      alert('Please select both From and To dates.');
+      return;
+    }
+    if (fromDate > toDate) {
+      alert('From date cannot be after To date.');
+      return;
+    }
+    fetchReportSummary();
   };
 
-  const handleDownloadExcel = () => {
-    const url = `${api.defaults.baseURL}/download-excel?reportType=${reportType}&Authorization=Bearer ${token}`;
-    window.open(url, '_blank');
+  // Build full download URL with current filters
+  const buildDownloadUrl = (type) => {
+    const base = `${api.defaults.baseURL}/${type === 'pdf' ? 'download-pdf' : 'download-excel'}`;
+    const params = buildParams();
+    const qs = new URLSearchParams({ ...params, Authorization: `Bearer ${token}` }).toString();
+    return `${base}?${qs}`;
   };
+
+  const handleDownloadPDF = () => window.open(buildDownloadUrl('pdf'), '_blank');
+  const handleDownloadExcel = () => window.open(buildDownloadUrl('excel'), '_blank');
 
   const getBeverageEmoji = (name) => {
     if (!name) return '🥛';
@@ -47,10 +82,7 @@ export default function Reports() {
   };
 
   const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this order record? This action cannot be undone.')) {
-      return;
-    }
-    
+    if (!window.confirm('Are you sure you want to permanently delete this order record? This action cannot be undone.')) return;
     try {
       const res = await api.delete(`/order/${orderId}`);
       alert(res.data.message || 'Order record removed.');
@@ -60,6 +92,11 @@ export default function Reports() {
     }
   };
 
+  const scopeLabel =
+    reportType === 'custom'
+      ? `${fromDate} → ${toDate}`
+      : reportType.toUpperCase();
+
   return (
     <div className="reports-view">
       <header className="page-header">
@@ -67,22 +104,58 @@ export default function Reports() {
         <p className="subtitle">Track aggregate spending, item volumes, and download spreadsheet logs</p>
       </header>
 
-      {/* Scope Toggles */}
+      {/* ── Filter Toolbar ── */}
       <div className="toolbar card" style={{ marginTop: '2rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Report Period Scope</label>
-        <div className="tab-group-full">
-          {['daily', 'weekly', 'monthly', 'yearly'].map((type) => {
-            const isSelected = reportType === type;
-            return (
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Report Period Scope</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div className="tab-group-full">
+            {['daily', 'weekly', 'monthly', 'yearly', 'custom'].map((type) => (
               <button
                 key={type}
-                className={`tab-btn-pill ${isSelected ? 'active' : ''}`}
+                className={`tab-btn-pill ${reportType === type ? 'active' : ''}`}
                 onClick={() => setReportType(type)}
               >
                 {type.toUpperCase()}
               </button>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Custom date pickers */}
+          {reportType === 'custom' && (
+            <div className="date-range-row">
+              <div className="date-input-group">
+                <label htmlFor="from-date">From</label>
+                <input
+                  id="from-date"
+                  type="date"
+                  value={fromDate}
+                  max={toDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                />
+              </div>
+              <span className="date-sep">→</span>
+              <div className="date-input-group">
+                <label htmlFor="to-date">To</label>
+                <input
+                  id="to-date"
+                  type="date"
+                  value={toDate}
+                  min={fromDate}
+                  max={todayStr()}
+                  onChange={(e) => setToDate(e.target.value)}
+                />
+              </div>
+              <button
+                id="btn-apply-date"
+                className="btn btn-primary"
+                onClick={handleApplyCustom}
+                style={{ height: '38px', padding: '0 1.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                <Search size={14} />
+                Apply
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -92,6 +165,7 @@ export default function Reports() {
         </div>
       ) : (
         <div className="reports-layout grid grid-cols-3 gap-md" style={{ marginTop: '1.5rem' }}>
+
           {/* Summary Metric Cards */}
           <div className="card stats-summary-card">
             <div className="card-icon-round primary">
@@ -128,7 +202,7 @@ export default function Reports() {
           {/* Report Order List Table */}
           <div className="card grid-colspan-3 report-table-card" style={{ padding: '2rem', marginTop: '1.5rem' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Order Records List</h3>
-            
+
             <div className="table-container">
               <table>
                 <thead>
@@ -160,7 +234,7 @@ export default function Reports() {
                           ₹{Number(order.amount).toFixed(2)}
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          <button 
+                          <button
                             className="btn btn-danger-outline btn-sm"
                             onClick={() => handleDeleteOrder(order.id)}
                             style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
@@ -188,10 +262,10 @@ export default function Reports() {
               <span className="exporter-badge">AVAILABLE DOWNLOADS</span>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 700, marginTop: '0.5rem' }}>Export Report Records</h3>
               <p className="desc-text" style={{ marginTop: '0.25rem', color: 'var(--color-text-secondary)' }}>
-                Download document spreadsheets or formal PDF summaries of the <strong>{reportType}</strong> scope logs.
+                Download document spreadsheets or formal PDF summaries for <strong>{scopeLabel}</strong>.
               </p>
             </div>
-            
+
             <div className="exporter-grid">
               {/* PDF Card */}
               <div className="exporter-subcard pdf-subcard">
@@ -243,21 +317,64 @@ export default function Reports() {
           color: var(--color-text-secondary);
           font-weight: 700;
           font-size: 0.8rem;
-          padding: 0.6rem 1.5rem;
+          padding: 0.6rem 1.2rem;
           border-radius: 6px;
           cursor: pointer;
           transition: all var(--transition-fast);
         }
 
-        .tab-btn-pill:hover {
-          color: var(--color-text);
-        }
+        .tab-btn-pill:hover { color: var(--color-text); }
 
         .tab-btn-pill.active {
           background-color: var(--color-primary);
           color: #ffffff;
         }
 
+        /* ── Date Range Row ── */
+        .date-range-row {
+          display: flex;
+          align-items: flex-end;
+          gap: 0.6rem;
+          flex-wrap: wrap;
+        }
+
+        .date-input-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+        }
+
+        .date-input-group label {
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: var(--color-text-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+
+        .date-input-group input[type="date"] {
+          height: 38px;
+          padding: 0 0.75rem;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          background: var(--color-surface);
+          color: var(--color-text);
+          font-size: 0.875rem;
+          outline: none;
+          transition: border-color var(--transition-fast);
+        }
+
+        .date-input-group input[type="date"]:focus {
+          border-color: var(--color-primary);
+        }
+
+        .date-sep {
+          color: var(--color-text-secondary);
+          font-weight: 700;
+          padding-bottom: 0.4rem;
+        }
+
+        /* ── Exporter ── */
         .exporters-section-card {
           grid-column: span 3;
           background-color: var(--color-surface);
@@ -302,85 +419,36 @@ export default function Reports() {
         }
 
         .subcard-icon-wrapper {
-          width: 48px;
-          height: 48px;
+          width: 48px; height: 48px;
           border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
         }
 
-        .pdf-icon-bg {
-          background-color: hsla(0, 72%, 50%, 0.1);
-          color: hsl(0, 72%, 50%);
-        }
+        .pdf-icon-bg  { background-color: hsla(0, 72%, 50%, 0.1); color: hsl(0, 72%, 50%); }
+        .excel-icon-bg { background-color: hsla(142, 60%, 45%, 0.1); color: hsl(142, 60%, 45%); }
 
-        .excel-icon-bg {
-          background-color: hsla(142, 60%, 45%, 0.1);
-          color: hsl(142, 60%, 45%);
-        }
-
-        .subcard-body {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .subcard-body h4 {
-          font-size: 1.05rem;
-          font-weight: 700;
-          color: var(--color-text);
-        }
-
-        .subcard-body p {
-          font-size: 0.85rem;
-          color: var(--color-text-secondary);
-          line-height: 1.4;
-          margin-bottom: 0.5rem;
-          min-height: 2.8rem;
-        }
+        .subcard-body { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+        .subcard-body h4 { font-size: 1.05rem; font-weight: 700; color: var(--color-text); }
+        .subcard-body p  { font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.4; margin-bottom: 0.5rem; min-height: 2.8rem; }
 
         .btn-pdf {
-          background-color: hsl(0, 72%, 50%);
-          color: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          font-weight: 600;
-          font-size: 0.9rem;
-          padding: 0.65rem 1rem;
-          border-radius: 8px;
-          border: none;
-          cursor: pointer;
+          background-color: hsl(0, 72%, 50%); color: #fff;
+          display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+          font-weight: 600; font-size: 0.9rem;
+          padding: 0.65rem 1rem; border-radius: 8px; border: none; cursor: pointer;
           transition: background-color var(--transition-fast);
         }
-
-        .btn-pdf:hover {
-          background-color: hsl(0, 72%, 40%);
-        }
+        .btn-pdf:hover { background-color: hsl(0, 72%, 40%); }
 
         .btn-excel {
-          background-color: hsl(142, 60%, 45%);
-          color: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          font-weight: 600;
-          font-size: 0.9rem;
-          padding: 0.65rem 1rem;
-          border-radius: 8px;
-          border: none;
-          cursor: pointer;
+          background-color: hsl(142, 60%, 45%); color: #fff;
+          display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+          font-weight: 600; font-size: 0.9rem;
+          padding: 0.65rem 1rem; border-radius: 8px; border: none; cursor: pointer;
           transition: background-color var(--transition-fast);
         }
-
-        .btn-excel:hover {
-          background-color: hsl(142, 60%, 35%);
-        }
+        .btn-excel:hover { background-color: hsl(142, 60%, 35%); }
 
         .report-table-card {
           grid-column: span 3;
@@ -397,27 +465,14 @@ export default function Reports() {
           cursor: pointer;
           transition: all var(--transition-fast);
         }
-
-        .btn-danger-outline:hover {
-          background-color: var(--color-error-bg);
-        }
+        .btn-danger-outline:hover { background-color: var(--color-error-bg); }
 
         @media (max-width: 900px) {
-          .exporters-section-card {
-            grid-column: span 1;
-          }
-
-          .report-table-card {
-            grid-column: span 1;
-          }
-
-          .exporter-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .exporter-subcard {
-            padding: 1.25rem;
-          }
+          .exporters-section-card, .report-table-card { grid-column: span 1; }
+          .exporter-grid { grid-template-columns: 1fr; }
+          .exporter-subcard { padding: 1.25rem; }
+          .tab-group-full { flex-wrap: wrap; }
+          .date-range-row { flex-direction: column; align-items: flex-start; }
         }
       `}</style>
     </div>
