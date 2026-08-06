@@ -148,6 +148,11 @@ export default function Dashboard() {
               </div>
               <div className="order-stats-row flex-between">
                 <span>Quantity: {todayOrder.quantity}</span>
+                {todayOrder.sugar_preference && (
+                  <span style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+                    {todayOrder.sugar_preference === 'with_sugar' ? '🍬 With Sugar' : '🚫 Without Sugar'}
+                  </span>
+                )}
               </div>
               {todayOrder.status === 'ordered' && (
                 <button 
