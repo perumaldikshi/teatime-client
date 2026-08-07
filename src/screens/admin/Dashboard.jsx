@@ -28,10 +28,22 @@ export default function AdminDashboard() {
   const handleToggleOrdering = async (currentState) => {
     setToggling(true);
     try {
-      await api.put('/settings', {
-        isOrderingOpen: !currentState
-      });
-      alert(`Ordering window is now manually ${!currentState ? 'Opened' : 'Closed'}.`);
+      const action = !currentState ? 'open' : 'closed';
+      await api.post('/settings/force-toggle', { action });
+      alert(`Ordering window is now manually ${action === 'open' ? 'Opened' : 'Closed'}.`);
+      fetchAdminStats();
+    } catch (err) {
+      alert(err.message || 'Settings override failed.');
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  const handleRevertToAuto = async () => {
+    setToggling(true);
+    try {
+      await api.post('/settings/force-toggle', { action: 'auto' });
+      alert('Ordering window is now reverted to automatic schedule.');
       fetchAdminStats();
     } catch (err) {
       alert(err.message || 'Settings override failed.');
@@ -114,6 +126,23 @@ export default function AdminDashboard() {
             <Power size={16} />
             {isOpen ? 'Force Close Ordering' : 'Force Open Ordering'}
           </button>
+
+          {orderingWindow?.override && (
+            <button
+              onClick={handleRevertToAuto}
+              className="btn w-full override-btn"
+              disabled={toggling}
+              style={{ 
+                marginTop: '0.75rem', 
+                backgroundColor: 'transparent',
+                border: '1px solid var(--color-border)',
+                color: 'var(--color-text-secondary)'
+              }}
+            >
+              <RefreshCw size={16} />
+              Revert to Automatic
+            </button>
+          )}
         </div>
 
         {/* Quick Aggregates */}
