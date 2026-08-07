@@ -201,7 +201,7 @@ export default function Reports() {
 
           {/* Sugar Summary Cards */}
           <div className="card stats-summary-card sugar-with-card">
-            <div className="card-icon-round" style={{ backgroundColor: 'hsla(142,70%,42%,0.12)', color: 'hsl(142,60%,35%)' }}>
+            <div className="card-icon-round" style={{ color: 'hsl(142,60%,35%)' }}>
               <span style={{ fontSize: '1.4rem' }}>🍬</span>
             </div>
             <div>
@@ -213,19 +213,19 @@ export default function Reports() {
           </div>
 
           <div className="card stats-summary-card sugar-without-card">
-            <div className="card-icon-round" style={{ backgroundColor: 'hsla(0,70%,55%,0.10)', color: 'hsl(0,60%,45%)' }}>
+            <div className="card-icon-round" style={{  color: 'hsl(0,60%,45%)' }}>
               <span style={{ fontSize: '1.4rem' }}>🚫</span>
             </div>
             <div>
               <p className="stat-label">Without Sugar</p>
-              <h3 className="stat-value" style={{ color: 'hsl(0,60%,45%)' }}>
+              <h3 className="stat-value" >
                 {reportData?.sugarSummary?.withoutSugar ?? 0} cups
               </h3>
             </div>
           </div>
 
           <div className="card stats-summary-card">
-            <div className="card-icon-round" style={{ backgroundColor: 'hsla(260,70%,55%,0.10)', color: 'hsl(260,60%,50%)' }}>
+            <div className="card-icon-round" style={{  color: 'hsl(260,60%,50%)' }}>
               <BarChart2 size={24} />
             </div>
             <div>
