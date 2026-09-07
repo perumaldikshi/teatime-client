@@ -18,6 +18,7 @@ export default function Employees() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('employee');
   const [isActive, setIsActive] = useState(true);
+  const [canSelectCupType, setCanSelectCupType] = useState(false);
 
   const fetchEmployees = async () => {
     try {
@@ -58,6 +59,7 @@ export default function Employees() {
     setPassword('');
     setRole('employee');
     setIsActive(true);
+    setCanSelectCupType(false);
     setModalVisible(true);
   };
 
@@ -69,6 +71,7 @@ export default function Employees() {
     setPassword(''); // Leave empty to not change password
     setRole(emp.role);
     setIsActive(emp.is_active);
+    setCanSelectCupType(emp.can_select_cup_type || false);
     setModalVisible(true);
   };
 
@@ -88,6 +91,7 @@ export default function Employees() {
           department,
           role,
           is_active: isActive,
+          can_select_cup_type: canSelectCupType,
           password: password || undefined
         });
         alert('Employee details updated successfully.');
@@ -98,7 +102,8 @@ export default function Employees() {
           email,
           password,
           role,
-          department
+          department,
+          can_select_cup_type: canSelectCupType
         });
         alert('New employee created successfully.');
       }
@@ -308,6 +313,19 @@ export default function Employees() {
                   </label>
                 </div>
               )}
+
+              <div className="form-group flex-between" style={{ flexDirection: 'row', padding: '0.5rem 0' }}>
+                <label htmlFor="modal-cup-type" style={{ cursor: 'pointer' }}>Allow Cup Type Selection (Paper/Glass)</label>
+                <label className="switch-toggle">
+                  <input 
+                    id="modal-cup-type" 
+                    type="checkbox" 
+                    checked={canSelectCupType} 
+                    onChange={(e) => setCanSelectCupType(e.target.checked)} 
+                  />
+                  <span className="slider-round"></span>
+                </label>
+              </div>
 
               <div className="modal-actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setModalVisible(false)}>Cancel</button>
