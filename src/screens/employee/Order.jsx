@@ -45,6 +45,10 @@ export default function Order() {
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
+    if (!isWindowOpen) {
+      alert('Ordering is currently closed.');
+      return;
+    }
     if (!selectedItem) {
       alert('Please select a tea/coffee item');
       return;
@@ -67,7 +71,7 @@ export default function Order() {
       alert(response.data.message);
       navigate('/');
     } catch (err) {
-      alert(err.message || 'Order execution failed.');
+      alert(err.response?.data?.error || err.message || 'Order execution failed.');
     } finally {
       setSubmitting(false);
     }

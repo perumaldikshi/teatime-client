@@ -16,7 +16,7 @@ export default function Reports() {
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState(null);
-  const [reportType, setReportType] = useState('monthly');
+  const [reportType, setReportType] = useState('daily');
 
   // Custom date range
   const [fromDate, setFromDate] = useState(firstOfMonth());

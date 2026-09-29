@@ -117,32 +117,50 @@ export default function AdminDashboard() {
               </span>
             </div>
           </div>
-          <button
-            onClick={() => handleToggleOrdering(isOpen)}
-            className={`btn w-full override-btn ${isOpen ? 'btn-danger' : 'btn-accent'}`}
-            disabled={toggling}
-            style={{ marginTop: '1.5rem' }}
-          >
-            <Power size={16} />
-            {isOpen ? 'Force Close Ordering' : 'Force Open Ordering'}
-          </button>
-
-          {orderingWindow?.override && (
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
             <button
-              onClick={handleRevertToAuto}
-              className="btn w-full override-btn"
+              onClick={() => handleToggleOrdering(isOpen)}
+              className={`btn override-btn ${isOpen ? 'btn-danger' : 'btn-accent'}`}
               disabled={toggling}
               style={{ 
-                marginTop: '0.75rem', 
-                backgroundColor: 'transparent',
-                border: '1px solid var(--color-border)',
-                color: 'var(--color-text-secondary)'
+                flex: '1', 
+                minWidth: '200px',
+                padding: '0.8rem 1.5rem', 
+                fontSize: '1rem',
+                fontWeight: '600',
+                boxShadow: isOpen ? '0 4px 15px rgba(239, 68, 68, 0.4)' : '0 4px 15px rgba(16, 185, 129, 0.4)',
+                transition: 'all 0.3s ease'
               }}
             >
-              <RefreshCw size={16} />
-              Revert to Automatic
+              <Power size={18} style={{ marginRight: '8px' }} />
+              {isOpen ? 'Force Close Ordering' : 'Force Open Ordering'}
             </button>
-          )}
+
+            {orderingWindow?.override && (
+              <button
+                onClick={handleRevertToAuto}
+                className="btn override-btn"
+                disabled={toggling}
+                style={{ 
+                  flex: '1', 
+                  minWidth: '200px',
+                  padding: '0.8rem 1.5rem', 
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-text-primary)',
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'}
+              >
+                <RefreshCw size={18} style={{ marginRight: '8px' }} />
+                Revert to Automatic
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Quick Aggregates */}

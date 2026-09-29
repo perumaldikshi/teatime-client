@@ -29,6 +29,10 @@ export default function Dashboard() {
   }, []);
 
   const handleQuickOrder = async (itemId, sugarPref = 'with_sugar') => {
+    if (!isWindowOpen) {
+      alert('Ordering is currently closed.');
+      return;
+    }
     setSubmitting(true);
     try {
       const payload = {
@@ -44,7 +48,7 @@ export default function Dashboard() {
       alert(response.data.message);
       loadDashboardData();
     } catch (err) {
-      alert(err.message);
+      alert(err.response?.data?.error || err.message);
     } finally {
       setSubmitting(false);
     }
