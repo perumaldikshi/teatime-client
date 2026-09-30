@@ -195,30 +195,15 @@ export default function Dashboard() {
                 key={item.id} 
                 className="card quick-order-card"
                 onClick={() => {
-                  if (item.item_type !== 'drink' && !submitting) {
-                    handleQuickOrder(item.id);
+                  if (!submitting) {
+                    handleQuickOrder(item.id, 'with_sugar');
                   }
                 }}
               >
                 <span className="item-emoji">{getBeverageEmoji(item.name)}</span>
                 <h4 className="item-name">{item.name}</h4>
                 <div className="quick-order-overlay">
-                  {item.item_type === 'drink' ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '85%' }}>
-                      <button 
-                        className="btn btn-sm" 
-                        style={{ backgroundColor: 'rgba(255,255,255,0.25)', border: '1px solid rgba(255,255,255,0.5)', color: 'white', padding: '0.4rem', fontSize: '0.85rem' }}
-                        onClick={(e) => { e.stopPropagation(); if (!submitting) handleQuickOrder(item.id, 'with_sugar'); }}
-                      >🍬 With Sugar</button>
-                      <button 
-                        className="btn btn-sm"
-                        style={{ backgroundColor: 'rgba(255,255,255,0.25)', border: '1px solid rgba(255,255,255,0.5)', color: 'white', padding: '0.4rem', fontSize: '0.85rem' }} 
-                        onClick={(e) => { e.stopPropagation(); if (!submitting) handleQuickOrder(item.id, 'without_sugar'); }}
-                      >🚫 Without Sugar</button>
-                    </div>
-                  ) : (
-                    <span>Order 1 Qty</span>
-                  )}
+                  <span>Order 1 Qty</span>
                 </div>
               </div>
             ))}
