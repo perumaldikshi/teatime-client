@@ -16,7 +16,7 @@ export default function Reports() {
   const { token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState(null);
-  const [reportType, setReportType] = useState('monthly');
+  const [reportType, setReportType] = useState('daily');
 
   // Custom date range
   const [fromDate, setFromDate] = useState(firstOfMonth());
@@ -269,9 +269,16 @@ export default function Reports() {
                         </td>
                         <td>
                           {order.item_type === 'drink' ? (
-                            <span className={`badge rpt-sugar-badge ${order.sugar_preference === 'with_sugar' ? 'rpt-sugar-with' : 'rpt-sugar-without'}`}>
-                              {order.sugar_preference === 'with_sugar' ? '🍬 With' : '🚫 No Sugar'}
-                            </span>
+                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                              <span className={`badge rpt-sugar-badge ${order.sugar_preference === 'with_sugar' ? 'rpt-sugar-with' : 'rpt-sugar-without'}`}>
+                                {order.sugar_preference === 'with_sugar' ? '🍬 With' : '🚫 No Sugar'}
+                              </span>
+                              {order.cup_type && (
+                                <span className="badge rpt-sugar-badge" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}>
+                                  {order.cup_type === 'paper' ? '🥤 Paper' : '🥛 Glass'}
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>—</span>
                           )}

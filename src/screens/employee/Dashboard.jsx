@@ -29,6 +29,10 @@ export default function Dashboard() {
   }, []);
 
   const handleQuickOrder = async (itemId, sugarPref = 'with_sugar') => {
+    if (!isWindowOpen) {
+      alert('Ordering is currently closed.');
+      return;
+    }
     setSubmitting(true);
     try {
       const payload = {
@@ -44,7 +48,7 @@ export default function Dashboard() {
       alert(response.data.message);
       loadDashboardData();
     } catch (err) {
-      alert(err.message);
+      alert(err.response?.data?.error || err.message);
     } finally {
       setSubmitting(false);
     }
@@ -148,11 +152,18 @@ export default function Dashboard() {
               </div>
               <div className="order-stats-row flex-between">
                 <span>Quantity: {todayOrder.quantity}</span>
-                {todayOrder.sugar_preference && (
-                  <span style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
-                    {todayOrder.sugar_preference === 'with_sugar' ? '🍬 With Sugar' : '🚫 Without Sugar'}
-                  </span>
-                )}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  {todayOrder.sugar_preference && (
+                    <span style={{ fontSize: '0.9rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+                      {todayOrder.sugar_preference === 'with_sugar' ? '🍬 With Sugar' : '🚫 Without Sugar'}
+                    </span>
+                  )}
+                  {todayOrder.cup_type && (
+                    <span className="badge" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}>
+                      {todayOrder.cup_type === 'paper' ? '🥤 Paper' : '🥛 Glass'}
+                    </span>
+                  )}
+                </div>
               </div>
               {todayOrder.status === 'ordered' && (
                 <button 

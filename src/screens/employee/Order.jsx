@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { Minus, Plus, ShoppingCart, Info } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Order() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
   const [sugarPreference, setSugarPreference] = useState('with_sugar');
+  const [cupPreference, setCupPreference] = useState('paper');
   const quantity = 1;
+  const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   
@@ -36,11 +39,16 @@ export default function Order() {
   const handleSelectItem = (item) => {
     setSelectedItem(item);
     setSugarPreference('with_sugar');
+    setCupPreference('paper');
   };
 
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
+    if (!isWindowOpen) {
+      alert('Ordering is currently closed.');
+      return;
+    }
     if (!selectedItem) {
       alert('Please select a tea/coffee item');
       return;
@@ -52,15 +60,18 @@ export default function Order() {
         teaItemId: selectedItem.id,
         quantity: quantity
       };
-      // Include sugar_preference only for drink items
+      // Include sugar_preference and cup_type only for drink items
       if (selectedItem.item_type === 'drink') {
         orderPayload.sugar_preference = sugarPreference;
+        if (user?.can_select_cup_type) {
+          orderPayload.cup_type = cupPreference;
+        }
       }
       const response = await api.post('/order', orderPayload);
       alert(response.data.message);
       navigate('/');
     } catch (err) {
-      alert(err.message || 'Order execution failed.');
+      alert(err.response?.data?.error || err.message || 'Order execution failed.');
     } finally {
       setSubmitting(false);
     }
@@ -210,6 +221,31 @@ export default function Order() {
                         disabled={!isWindowOpen}
                       >
                         🚫 Without Sugar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Cup Preference */}
+                {selectedItem?.item_type === 'drink' && user?.can_select_cup_type && (
+                  <div className="sugar-pref-container">
+                    <label className="sugar-pref-label">Cup Preference</label>
+                    <div className="sugar-toggle-group">
+                      <button
+                        type="button"
+                        className={`sugar-btn ${cupPreference === 'paper' ? 'cup-active' : ''}`}
+                        onClick={() => setCupPreference('paper')}
+                        disabled={!isWindowOpen}
+                      >
+                        🥤 Paper Cup
+                      </button>
+                      <button
+                        type="button"
+                        className={`sugar-btn ${cupPreference === 'glass' ? 'cup-active' : ''}`}
+                        onClick={() => setCupPreference('glass')}
+                        disabled={!isWindowOpen}
+                      >
+                        🥛 Glass Cup
                       </button>
                     </div>
                   </div>
@@ -470,6 +506,12 @@ export default function Order() {
           border-color: hsl(0, 70%, 55%);
           background-color: hsla(0, 70%, 55%, 0.08);
           color: hsl(0, 60%, 45%);
+        }
+
+        .cup-active {
+          border-color: var(--color-primary);
+          background-color: var(--color-primary-light);
+          color: var(--color-primary);
         }
       `}</style>
     </div>
