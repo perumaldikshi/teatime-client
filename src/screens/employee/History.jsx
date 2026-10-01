@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
+import { formatOrderTime } from '../../utils/dateUtils';
 
 export default function History() {
   const { user } = useAuth();
@@ -121,7 +122,7 @@ export default function History() {
               {orders && orders.length > 0 ? (
                 orders.map((order) => (
                   <tr key={order.id}>
-                    <td style={{ fontWeight: 600 }}>{order.order_date || new Date(order.created_at).toLocaleDateString()}</td>
+                    <td style={{ fontWeight: 600 }}>{order.created_at ? formatOrderTime(order.created_at) : order.order_date}</td>
                     {isAdmin && <td>{order.employee_name || 'System User'}</td>}
                     {isAdmin && <td>{order.department || 'N/A'}</td>}
                     <td>

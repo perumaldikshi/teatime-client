@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { FileText, Download, BarChart2, TrendingUp, Calendar, ShoppingBag, Search, Candy, Ban } from 'lucide-react';
+import { formatOrderTime } from '../../utils/dateUtils';
 
 // Today's date in YYYY-MM-DD
 const todayStr = () => new Date().toISOString().split('T')[0];
@@ -259,7 +260,7 @@ export default function Reports() {
                     reportData.orders.map((order) => (
                       <tr key={order.id}>
                         <td style={{ fontWeight: 600 }}>
-                          {order.order_date || new Date(order.created_at).toLocaleDateString()}
+                          {order.created_at ? formatOrderTime(order.created_at) : order.order_date}
                         </td>
                         <td>{order.employee_name || 'System User'}</td>
                         <td>{order.department || 'N/A'}</td>

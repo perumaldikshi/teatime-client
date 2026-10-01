@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { RefreshCw, Calendar } from 'lucide-react';
+import { formatOrderTimeOnly } from '../../utils/dateUtils';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -164,6 +165,9 @@ export default function Dashboard() {
                     </span>
                   )}
                 </div>
+              </div>
+              <div style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                Ordered at: {todayOrder.created_at ? formatOrderTimeOnly(todayOrder.created_at) : 'N/A'}
               </div>
               {todayOrder.status === 'ordered' && (
                 <button 
