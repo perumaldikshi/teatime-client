@@ -348,6 +348,15 @@ export default function Employees() {
           padding-left: 2.5rem;
         }
 
+        .search-icon {
+          position: absolute;
+          left: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--color-text-muted);
+          pointer-events: none;
+        }
+
         .employee-table-cell {
           display: flex;
           align-items: center;
