@@ -15,11 +15,24 @@ export default function TeaMaster() {
   const [price, setPrice] = useState('');
   const [isAvailable, setIsAvailable] = useState(true);
   const [itemType, setItemType] = useState('drink');
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  // Close modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && modalVisible) {
+        setModalVisible(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [modalVisible]);
 
   const fetchItems = async () => {
     try {
       const res = await api.get('/tea-items');
-      setItems(res.data.teaItems);
+      setItems(res.data.teaItems || []);
     } catch (err) {
       alert(err.message || 'Failed to fetch tea items.');
     } finally {
@@ -27,17 +40,28 @@ export default function TeaMaster() {
     }
   };
 
-  const handleDeleteItem = async (itemId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this beverage item? This will remove it from the menu catalog.')) {
+  const handleDeleteItem = async (itemId, itemName) => {
+    if (!window.confirm(`Are you sure you want to remove "${itemName || 'this beverage'}" from the menu catalog?`)) {
       return;
     }
 
     try {
       const res = await api.delete(`/tea-items/${itemId}`);
-      alert(res.data.message || 'Beverage deleted successfully.');
+      alert(res.data?.message || 'Beverage deleted successfully.');
       fetchItems();
     } catch (err) {
       alert(err.message || 'Failed to delete beverage item.');
+    }
+  };
+
+  const handleToggleAvailability = async (item) => {
+    try {
+      await api.put(`/tea-items/${item.id}`, {
+        is_available: !item.is_available
+      });
+      fetchItems();
+    } catch (err) {
+      alert(err.message || 'Failed to toggle beverage availability.');
     }
   };
 
@@ -51,47 +75,55 @@ export default function TeaMaster() {
     setPrice('');
     setIsAvailable(true);
     setItemType('drink');
+    setFormError('');
     setModalVisible(true);
   };
 
   const handleOpenEdit = (item) => {
     setEditingItem(item);
-    setName(item.name);
-    setPrice(item.price.toString());
-    setIsAvailable(item.is_available);
+    setName(item.name || '');
+    setPrice(item.price !== undefined && item.price !== null ? item.price.toString() : '');
+    setIsAvailable(Boolean(item.is_available));
     setItemType(item.item_type || 'drink');
+    setFormError('');
     setModalVisible(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !price || isNaN(Number(price))) {
-      alert('Please enter a valid beverage name and price.');
+    setFormError('');
+    if (!name.trim() || price === '' || isNaN(Number(price))) {
+      setFormError('Please enter a valid beverage name and price.');
       return;
     }
 
+    setSubmitting(true);
     try {
       if (editingItem) {
         await api.put(`/tea-items/${editingItem.id}`, {
-          name,
+          name: name.trim(),
           price: Number(price),
           is_available: isAvailable,
           item_type: itemType
         });
+        setModalVisible(false);
+        fetchItems();
         alert('Beverage updated successfully.');
       } else {
         await api.post('/tea-items', {
-          name,
+          name: name.trim(),
           price: Number(price),
           is_available: isAvailable,
           item_type: itemType
         });
+        setModalVisible(false);
+        fetchItems();
         alert('Beverage item created successfully.');
       }
-      setModalVisible(false);
-      fetchItems();
     } catch (err) {
-      alert(err.message || 'Beverage registration failed.');
+      setFormError(err.message || 'Beverage registration failed.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -133,9 +165,15 @@ export default function TeaMaster() {
                       <span className={`badge ${item.item_type === 'snack' ? 'badge-warning' : 'badge-info'}`} style={{ fontSize: '0.65rem' }}>
                         {item.item_type === 'snack' ? '🍪 Snack' : '🍵 Drink'}
                       </span>
-                      <span className={`badge ${item.is_available ? 'badge-success' : 'badge-error'}`}>
-                        {item.is_available ? 'Available' : 'Unavailable'}
-                      </span>
+                      <button
+                        type="button"
+                        className={`badge ${item.is_available ? 'badge-success' : 'badge-error'}`}
+                        onClick={() => handleToggleAvailability(item)}
+                        title={`Click to mark as ${item.is_available ? 'Unavailable' : 'Available'}`}
+                        style={{ cursor: 'pointer', border: 'none' }}
+                      >
+                        {item.is_available ? '● Available' : '○ Unavailable'}
+                      </button>
                     </div>
                   </div>
 
@@ -153,7 +191,7 @@ export default function TeaMaster() {
                     </button>
                     <button 
                       className="btn btn-danger-outline"
-                      onClick={() => handleDeleteItem(item.id)}
+                      onClick={() => handleDeleteItem(item.id, item.name)}
                       style={{ padding: '0.5rem 1rem', flex: 1 }}
                     >
                       <Trash2 size={14} />
@@ -173,15 +211,38 @@ export default function TeaMaster() {
 
       {/* Add/Edit Beverage Modal */}
       {modalVisible && (
-        <div className="modal-overlay">
-          <div className="modal-content card card-header-accent">
-            <button className="modal-close-x" onClick={() => setModalVisible(false)}>
+        <div className="modal-overlay" onClick={() => setModalVisible(false)}>
+          <div className="modal-content card card-header-accent" onClick={(e) => e.stopPropagation()}>
+            <button 
+              type="button" 
+              className="modal-close-x" 
+              onClick={() => setModalVisible(false)}
+              aria-label="Close modal"
+            >
               <X size={20} />
             </button>
             <h3>{editingItem ? 'Edit Beverage Details' : 'Register New Beverage'}</h3>
-            <p className="desc-text" style={{ marginBottom: '1.5rem' }}>
+            <p className="desc-text" style={{ marginBottom: '1.25rem' }}>
               Modify tea or coffee properties, daily costs, and menu catalog states
             </p>
+
+            {formError && (
+              <div className="form-error-banner" style={{
+                backgroundColor: 'var(--color-error-bg)',
+                border: '1px solid var(--color-error)',
+                color: 'var(--color-error)',
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-sm)',
+                marginBottom: '1.25rem',
+                fontSize: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <ShieldAlert size={18} />
+                <span>{formError}</span>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">
@@ -246,9 +307,9 @@ export default function TeaMaster() {
               </div>
 
               <div className="modal-actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setModalVisible(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">
-                  {editingItem ? 'Save Changes' : 'Register Beverage'}
+                <button type="button" className="btn btn-secondary" onClick={() => setModalVisible(false)} disabled={submitting}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? (editingItem ? 'Saving Changes...' : 'Registering...') : (editingItem ? 'Save Changes' : 'Register Beverage')}
                 </button>
               </div>
             </form>
@@ -339,6 +400,34 @@ export default function TeaMaster() {
           background-color: hsla(210, 80%, 50%, 0.10);
           color: hsl(210, 70%, 45%);
           border: 1px solid hsla(210, 80%, 50%, 0.20);
+        }
+
+        .modal-content {
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .modal-close-x {
+          position: absolute;
+          top: 1.25rem;
+          right: 1.25rem;
+          z-index: 20;
+          background: transparent;
+          border: none;
+          color: var(--color-text-muted);
+          cursor: pointer;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all var(--transition-fast);
+        }
+
+        .modal-close-x:hover {
+          background-color: var(--color-surface-hover);
+          color: var(--color-text);
         }
       `}</style>
     </div>

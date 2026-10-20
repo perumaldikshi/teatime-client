@@ -20,6 +20,20 @@ export default function Employees() {
   const [isActive, setIsActive] = useState(true);
   const [canSelectCupType, setCanSelectCupType] = useState(false);
 
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  // Close modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && modalVisible) {
+        setModalVisible(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [modalVisible]);
+
   const fetchEmployees = async () => {
     try {
       const res = await api.get('/employees', {
@@ -60,6 +74,7 @@ export default function Employees() {
     setRole('employee');
     setIsActive(true);
     setCanSelectCupType(false);
+    setFormError('');
     setModalVisible(true);
   };
 
@@ -70,47 +85,54 @@ export default function Employees() {
     setDepartment(emp.department || '');
     setPassword(''); // Leave empty to not change password
     setRole(emp.role);
-    setIsActive(emp.is_active);
-    setCanSelectCupType(emp.can_select_cup_type || false);
+    setIsActive(Boolean(emp.is_active));
+    setCanSelectCupType(Boolean(emp.can_select_cup_type));
+    setFormError('');
     setModalVisible(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !email || !department || (!editingEmployee && !password)) {
-      alert('Please fill in all required fields.');
+    setFormError('');
+    if (!name.trim() || !email.trim() || !department.trim() || (!editingEmployee && !password)) {
+      setFormError('Please fill in all required fields.');
       return;
     }
 
+    setSubmitting(true);
     try {
       if (editingEmployee) {
         // Update employee
         await api.put(`/employees/${editingEmployee.id}`, {
-          name,
-          email,
-          department,
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          department: department.trim(),
           role,
           is_active: isActive,
           can_select_cup_type: canSelectCupType,
           password: password || undefined
         });
+        setModalVisible(false);
+        fetchEmployees();
         alert('Employee details updated successfully.');
       } else {
         // Create employee
         await api.post('/employees', {
-          name,
-          email,
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
           password,
           role,
-          department,
+          department: department.trim(),
           can_select_cup_type: canSelectCupType
         });
+        setModalVisible(false);
+        fetchEmployees();
         alert('New employee created successfully.');
       }
-      setModalVisible(false);
-      fetchEmployees();
     } catch (err) {
-      alert(err.message || 'Database registration failed.');
+      setFormError(err.message || 'Database registration failed.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -232,15 +254,38 @@ export default function Employees() {
 
       {/* Add/Edit Employee Modal overlay */}
       {modalVisible && (
-        <div className="modal-overlay">
-          <div className="modal-content card card-header-accent">
-            <button className="modal-close-x" onClick={() => setModalVisible(false)}>
+        <div className="modal-overlay" onClick={() => setModalVisible(false)}>
+          <div className="modal-content card card-header-accent" onClick={(e) => e.stopPropagation()}>
+            <button 
+              type="button" 
+              className="modal-close-x" 
+              onClick={() => setModalVisible(false)}
+              aria-label="Close modal"
+            >
               <X size={20} />
             </button>
             <h3>{editingEmployee ? 'Edit Employee Details' : 'Create New Employee'}</h3>
-            <p className="desc-text" style={{ marginBottom: '1.5rem' }}>
+            <p className="desc-text" style={{ marginBottom: '1.25rem' }}>
               {editingEmployee ? 'Update user account information and configurations' : 'Register a new profile credentials in the TeaTime database'}
             </p>
+
+            {formError && (
+              <div className="form-error-banner" style={{
+                backgroundColor: 'var(--color-error-bg)',
+                border: '1px solid var(--color-error)',
+                color: 'var(--color-error)',
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-sm)',
+                marginBottom: '1.25rem',
+                fontSize: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <ShieldAlert size={18} />
+                <span>{formError}</span>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">
@@ -328,9 +373,9 @@ export default function Employees() {
               </div>
 
               <div className="modal-actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setModalVisible(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">
-                  {editingEmployee ? 'Save Changes' : 'Create Account'}
+                <button type="button" className="btn btn-secondary" onClick={() => setModalVisible(false)} disabled={submitting}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? (editingEmployee ? 'Saving Changes...' : 'Creating Account...') : (editingEmployee ? 'Save Changes' : 'Create Account')}
                 </button>
               </div>
             </form>
@@ -421,19 +466,27 @@ export default function Employees() {
           background-color: var(--color-success-bg);
         }
 
+        .modal-content {
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
         .modal-close-x {
           position: absolute;
-          top: 1.5rem;
-          right: 1.5rem;
+          top: 1.25rem;
+          right: 1.25rem;
+          z-index: 20;
           background: transparent;
           border: none;
           color: var(--color-text-muted);
           cursor: pointer;
-          padding: 4px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: all var(--transition-fast);
         }
 
         .modal-close-x:hover {
