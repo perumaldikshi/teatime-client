@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { RefreshCw, Calendar } from 'lucide-react';
+import { RefreshCw, Calendar, Users, ClipboardList, ArrowRight } from 'lucide-react';
 import { formatOrderTimeOnly } from '../../utils/dateUtils';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -18,6 +18,9 @@ export default function Dashboard() {
     try {
       const res = await api.get('/dashboard');
       setData(res.data);
+      if (res.data?.can_view_all_orders !== undefined && res.data.can_view_all_orders !== user?.can_view_all_orders) {
+        updateUser({ can_view_all_orders: res.data.can_view_all_orders });
+      }
     } catch (err) {
       setError(err.message || 'Failed to fetch dashboard data.');
     } finally {
@@ -81,7 +84,8 @@ export default function Dashboard() {
     );
   }
 
-  const { orderingWindow, teaItems, todayOrder, monthlyStats } = data || {};
+  const { orderingWindow, teaItems, todayOrder, monthlyStats, todayAllOrders, todayBeverageCounts } = data || {};
+  const hasViewAllAccess = Boolean(data?.can_view_all_orders || user?.can_view_all_orders);
   const isWindowOpen = orderingWindow?.isOpen;
 
   const getBeverageEmoji = (name) => {
@@ -222,6 +226,123 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Tea Volunteer Today's Orders Section */}
+      {hasViewAllAccess && todayAllOrders && (
+        <section className="dashboard-section" style={{ marginBottom: '2rem' }}>
+          <div className="flex-between" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h2>Today's Employee Orders 🍵</h2>
+                <span className="badge" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', fontWeight: 700, fontSize: '0.75rem' }}>
+                  Distribution Access
+                </span>
+              </div>
+              <p className="section-subtitle">
+                Items ordered by colleagues today ({todayAllOrders.length} orders submitted)
+              </p>
+            </div>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => navigate('/all-orders')}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem' }}
+            >
+              <span>View Full List</span>
+              <ArrowRight size={14} />
+            </button>
+          </div>
+
+          {/* Quick Beverage Counts */}
+          {todayBeverageCounts && todayBeverageCounts.length > 0 && (
+            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+              {todayBeverageCounts.map(item => (
+                <div key={item.tea_name} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>
+                  <span>{getBeverageEmoji(item.tea_name)}</span>
+                  <strong>{item.tea_name}:</strong>
+                  <span className="badge badge-primary">{item.total_qty}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Today Orders preview cards/list */}
+          <div className="card" style={{ marginTop: '1rem', padding: '1.25rem' }}>
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Employee Name</th>
+                    <th>Item Ordered</th>
+                    <th>Cup & Sugar</th>
+                    <th style={{ textAlign: 'center' }}>Quantity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {todayAllOrders.length > 0 ? (
+                    todayAllOrders.slice(0, 10).map(order => (
+                      <tr key={order.id}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                              {(order.employee_name || 'U').charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <strong style={{ fontSize: '0.9rem', color: 'var(--color-text)', display: 'block' }}>{order.employee_name}</strong>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>{order.department || 'General'}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span>{getBeverageEmoji(order.tea_name)}</span>
+                            <strong>{order.tea_name}</strong>
+                          </div>
+                        </td>
+                        <td>
+                          {order.item_type === 'drink' ? (
+                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                              {order.cup_type && (
+                                <span className="badge" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', fontSize: '0.7rem' }}>
+                                  {order.cup_type === 'paper' ? '🥤 Paper' : '🥛 Glass'}
+                                </span>
+                              )}
+                              <span className="badge" style={{
+                                fontSize: '0.7rem',
+                                backgroundColor: order.sugar_preference === 'with_sugar' ? 'hsla(142, 70%, 42%, 0.10)' : 'hsla(0, 70%, 55%, 0.08)',
+                                color: order.sugar_preference === 'with_sugar' ? 'hsl(142, 60%, 35%)' : 'hsl(0, 60%, 45%)'
+                              }}>
+                                {order.sugar_preference === 'with_sugar' ? '🍬 Sugar' : '🚫 No Sugar'}
+                              </span>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>🍪 Snack</span>
+                          )}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <span className="badge badge-primary">{order.quantity}</span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-secondary)' }}>
+                        No orders placed by employees yet today.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              {todayAllOrders.length > 10 && (
+                <div style={{ textAlign: 'center', marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '0.75rem' }}>
+                  <button className="btn btn-secondary btn-sm" onClick={() => navigate('/all-orders')}>
+                    View all {todayAllOrders.length} orders →
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </section>
       )}

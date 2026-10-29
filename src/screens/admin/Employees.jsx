@@ -19,6 +19,7 @@ export default function Employees() {
   const [role, setRole] = useState('employee');
   const [isActive, setIsActive] = useState(true);
   const [canSelectCupType, setCanSelectCupType] = useState(false);
+  const [canViewAllOrders, setCanViewAllOrders] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
@@ -74,6 +75,7 @@ export default function Employees() {
     setRole('employee');
     setIsActive(true);
     setCanSelectCupType(false);
+    setCanViewAllOrders(false);
     setFormError('');
     setModalVisible(true);
   };
@@ -87,6 +89,7 @@ export default function Employees() {
     setRole(emp.role);
     setIsActive(Boolean(emp.is_active));
     setCanSelectCupType(Boolean(emp.can_select_cup_type));
+    setCanViewAllOrders(Boolean(emp.can_view_all_orders));
     setFormError('');
     setModalVisible(true);
   };
@@ -110,6 +113,7 @@ export default function Employees() {
           role,
           is_active: isActive,
           can_select_cup_type: canSelectCupType,
+          can_view_all_orders: canViewAllOrders,
           password: password || undefined
         });
         setModalVisible(false);
@@ -123,7 +127,8 @@ export default function Employees() {
           password,
           role,
           department: department.trim(),
-          can_select_cup_type: canSelectCupType
+          can_select_cup_type: canSelectCupType,
+          can_view_all_orders: canViewAllOrders
         });
         setModalVisible(false);
         fetchEmployees();
@@ -205,10 +210,17 @@ export default function Employees() {
                     <td>{emp.email}</td>
                     <td><span className="dept-badge">{emp.department || 'General'}</span></td>
                     <td>
-                      <span className={`badge ${emp.role === 'admin' ? 'badge-warning' : 'badge-muted'}`} style={{ display: 'inline-flex', alignItems: 'center' }}>
-                        {emp.role === 'admin' && <Shield size={12} style={{ marginRight: '0.25rem' }} />}
-                        {emp.role.toUpperCase()}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <span className={`badge ${emp.role === 'admin' ? 'badge-warning' : 'badge-muted'}`} style={{ display: 'inline-flex', alignItems: 'center', width: 'fit-content' }}>
+                          {emp.role === 'admin' && <Shield size={12} style={{ marginRight: '0.25rem' }} />}
+                          {emp.role.toUpperCase()}
+                        </span>
+                        {emp.can_view_all_orders && (
+                          <span className="badge" style={{ backgroundColor: 'var(--color-primary-light)', color: 'var(--color-primary)', fontSize: '0.65rem', width: 'fit-content' }} title="Has permission to view other employees' orders">
+                            📋 View All Orders
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td>
                       <span className={`badge ${emp.is_active ? 'badge-success' : 'badge-error'}`}>
@@ -367,6 +379,24 @@ export default function Employees() {
                     type="checkbox" 
                     checked={canSelectCupType} 
                     onChange={(e) => setCanSelectCupType(e.target.checked)} 
+                  />
+                  <span className="slider-round"></span>
+                </label>
+              </div>
+
+              <div className="form-group flex-between" style={{ flexDirection: 'row', padding: '0.5rem 0', alignItems: 'flex-start' }}>
+                <div style={{ paddingRight: '1rem' }}>
+                  <label htmlFor="modal-view-orders" style={{ cursor: 'pointer', fontWeight: 600 }}>Allow View All Orders (Distribution Access)</label>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', display: 'block', marginTop: '2px' }}>
+                    Enables this employee to see what items other employees ordered (emp2, emp3) for tea distribution
+                  </span>
+                </div>
+                <label className="switch-toggle" style={{ marginTop: '4px' }}>
+                  <input 
+                    id="modal-view-orders" 
+                    type="checkbox" 
+                    checked={canViewAllOrders} 
+                    onChange={(e) => setCanViewAllOrders(e.target.checked)} 
                   />
                   <span className="slider-round"></span>
                 </label>

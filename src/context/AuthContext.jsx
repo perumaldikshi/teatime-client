@@ -20,6 +20,14 @@ export const AuthProvider = ({ children }) => {
     setError(null);
   };
 
+  const updateUser = (fields) => {
+    setUser(prev => {
+      const updated = { ...prev, ...fields };
+      localStorage.setItem('user_data', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const logout = () => {
     if (user && user.role === 'admin') {
       api.post('/auth/logout-all').catch((err) => {
@@ -94,7 +102,7 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   return (
-    <AuthContext.Provider value={{ token, user, loading, error, login, logout, setLoading, setError }}>
+    <AuthContext.Provider value={{ token, user, loading, error, login, logout, updateUser, setLoading, setError }}>
       {children}
     </AuthContext.Provider>
   );
