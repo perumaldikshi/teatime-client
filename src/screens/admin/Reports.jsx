@@ -281,7 +281,7 @@ export default function Reports() {
                               )}
                             </div>
                           ) : (
-                            <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>—</span>
+                            <span className="badge" style={{ backgroundColor: 'hsla(217, 91%, 60%, 0.15)', color: 'hsl(217, 91%, 45%)', border: '1px solid hsl(217, 91%, 60%)', fontSize: '0.72rem', fontWeight: 700 }}>🍪 Snack</span>
                           )}
                         </td>
                         <td style={{ fontWeight: 600 }}>{order.quantity}</td>

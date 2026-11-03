@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { RefreshCw, Calendar } from 'lucide-react';
+import { RefreshCw, Calendar, Cookie } from 'lucide-react';
 import { formatOrderTimeOnly } from '../../utils/dateUtils';
 
 export default function Dashboard() {
@@ -84,7 +84,7 @@ export default function Dashboard() {
     );
   }
 
-  const { orderingWindow, teaItems, todayOrder, monthlyStats } = data || {};
+  const { orderingWindow, teaItems, todayOrder, todaySharedSnack, monthlyStats } = data || {};
   const isWindowOpen = orderingWindow?.isOpen;
 
   const getBeverageEmoji = (name) => {
@@ -197,6 +197,54 @@ export default function Dashboard() {
               ) : (
                 <span className="badge badge-muted" style={{ marginTop: '1rem' }}>Closed</span>
               )}
+            </div>
+          )}
+        </div>
+
+        {/* Today's Shared Snack Card */}
+        <div className="card card-header-accent" style={{ gridColumn: 'span 2' }}>
+          <div className="flex-between">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.4rem' }}>🍪</span>
+              <h3 style={{ margin: 0 }}>Shared Snacks (Today's Session)</h3>
+            </div>
+            {todaySharedSnack && (
+              <span className="badge badge-success">
+                Ordered (Qty: {todaySharedSnack.total_quantity || 3})
+              </span>
+            )}
+          </div>
+
+          {todaySharedSnack ? (
+            <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', backgroundColor: 'var(--color-background)', padding: '1rem 1.25rem', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+              <div>
+                <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--color-text)' }}>
+                  {todaySharedSnack.snack_name}
+                </h4>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                  Shared between <strong>{todaySharedSnack.primary_user_name}</strong> & <strong>{todaySharedSnack.shared_user_name}</strong>
+                  {' • '}
+                  <strong>{todaySharedSnack.total_quantity} Qty</strong>
+                </p>
+              </div>
+              <button 
+                className="btn btn-secondary btn-sm"
+                onClick={() => navigate('/snacks')}
+              >
+                View Shared Details
+              </button>
+            </div>
+          ) : (
+            <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+              <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>
+                No snacks ordered yet. Share snacks with a colleague for this afternoon tea session.
+              </p>
+              <button 
+                className="btn btn-secondary btn-sm"
+                onClick={() => navigate('/snacks')}
+              >
+                Order / Share Snacks
+              </button>
             </div>
           )}
         </div>

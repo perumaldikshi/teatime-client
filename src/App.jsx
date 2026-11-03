@@ -15,6 +15,7 @@ import History from './screens/employee/History';
 import Notifications from './screens/employee/Notifications';
 import Profile from './screens/employee/Profile';
 import AllOrders from './screens/employee/AllOrders';
+import Snacks from './screens/employee/Snacks';
 
 // Admin Screens
 import AdminDashboard from './screens/admin/Dashboard';
@@ -79,6 +80,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={['employee']}>
             <OrderDrink />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/snacks" 
+        element={
+          <ProtectedRoute allowedRoles={['employee', 'admin']}>
+            <Snacks />
           </ProtectedRoute>
         } 
       />

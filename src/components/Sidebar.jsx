@@ -17,7 +17,8 @@ import {
   Menu, 
   X,
   Coffee as TeaMasterIcon,
-  ClipboardList
+  ClipboardList,
+  Cookie
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -34,6 +35,7 @@ export default function Sidebar() {
   const employeeLinks = [
     { to: '/', label: 'Home', icon: <Home size={18} /> },
     { to: '/order', label: 'Order Drink', icon: <Coffee size={18} /> },
+    { to: '/snacks', label: 'Colleagues', icon: <Users size={18} /> },
     ...(user?.can_view_all_orders ? [{ to: '/all-orders', label: "All Orders", icon: <ClipboardList size={18} /> }] : []),
     { to: '/history', label: 'My History', icon: <History size={18} /> },
     { to: '/notifications', label: 'Alerts', icon: <Bell size={18} /> },

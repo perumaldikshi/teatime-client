@@ -14,6 +14,7 @@ export default function Order() {
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
   
   const navigate = useNavigate();
 
@@ -21,7 +22,10 @@ export default function Order() {
     try {
       const res = await api.get('/dashboard');
       setData(res.data);
-      if (res.data.teaItems && res.data.teaItems.length > 0) {
+      const commonOnly = (res.data.teaItems || []).filter(item => (item.category || 'common') === 'common');
+      if (commonOnly.length > 0) {
+        setSelectedItem(commonOnly[0]);
+      } else if (res.data.teaItems && res.data.teaItems.length > 0) {
         setSelectedItem(res.data.teaItems[0]);
       }
     } catch (err) {
@@ -123,13 +127,35 @@ export default function Order() {
         </div>
       )}
 
+      {/* Snacks Option Banner */}
+      <div className="card" style={{ marginTop: '1.5rem', padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span style={{ fontSize: '1.5rem' }}>🍪</span>
+          <div>
+            <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Looking for Afternoon Snacks?</h4>
+            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+              Share afternoon biscuits/snacks with a colleague
+            </p>
+          </div>
+        </div>
+        <button 
+          className="btn btn-secondary btn-sm" 
+          onClick={() => navigate('/snacks')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+        >
+          Go to Snacks Option 🍪
+        </button>
+      </div>
+
       <div className="order-container grid grid-cols-2 gap-lg" style={{ marginTop: '2rem' }}>
         {/* Item Selection List */}
         <div className="menu-selection-section">
           <h3>Menu Items</h3>
           <div className="menu-list" style={{ marginTop: '1rem' }}>
             {teaItems && teaItems.length > 0 ? (
-              teaItems.map((item) => {
+              teaItems
+                .filter(item => (item.category || 'common') === 'common')
+                .map((item) => {
                 const isSelected = selectedItem?.id === item.id;
                 return (
                   <div
@@ -506,6 +532,20 @@ export default function Order() {
           border-color: hsl(0, 70%, 55%);
           background-color: hsla(0, 70%, 55%, 0.08);
           color: hsl(0, 60%, 45%);
+        }
+
+        .badge-purple {
+          background-color: hsla(265, 89%, 66%, 0.14);
+          color: #7c3aed;
+          border: 1px solid hsla(265, 89%, 66%, 0.35);
+          font-weight: 600;
+        }
+
+        .badge-common {
+          background-color: hsla(180, 70%, 45%, 0.12);
+          color: hsl(180, 60%, 30%);
+          border: 1px solid hsla(180, 70%, 45%, 0.25);
+          font-weight: 600;
         }
 
         .cup-active {
