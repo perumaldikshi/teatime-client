@@ -23,7 +23,6 @@ export default function Snacks() {
   // Selection form states
   const [selectedSnack, setSelectedSnack] = useState(null);
   const [selectedColleagueId, setSelectedColleagueId] = useState('');
-  const [orderMode, setOrderMode] = useState('share'); // 'share' | 'self'
 
   const loadSnackData = async () => {
     setLoading(true);
@@ -57,8 +56,7 @@ export default function Snacks() {
         }
       } else {
         setSelectedColleagueId('');
-        // If no colleagues available, default mode to 'self'
-        setOrderMode('self');
+        // No colleagues available
       }
 
       // 4. Fetch ordering window info from dashboard
@@ -81,7 +79,7 @@ export default function Snacks() {
     loadSnackData();
   }, []);
 
-  const effectiveMode = colleagues.length === 0 ? 'self' : orderMode;
+  const isSoloMode = colleagues.length === 0;
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -94,9 +92,8 @@ export default function Snacks() {
       return;
     }
 
-    const isSelf = effectiveMode === 'self';
-    if (!isSelf && !selectedColleagueId) {
-      alert('Please select a colleague to share with, or choose "Order for Myself".');
+    if (!isSoloMode && !selectedColleagueId) {
+      alert('Please select a colleague to share with.');
       return;
     }
 
@@ -107,8 +104,8 @@ export default function Snacks() {
     try {
       const res = await api.post('/shared-snacks', {
         teaItemId: selectedSnack.id,
-        orderMode: isSelf ? 'self' : 'share',
-        sharedWithUserId: isSelf ? null : parseInt(selectedColleagueId, 10),
+        orderMode: isSoloMode ? 'self' : 'share',
+        sharedWithUserId: isSoloMode ? null : parseInt(selectedColleagueId, 10),
         additionalQuantity: 0
       });
       setSuccessMsg(res.data.message);
@@ -328,129 +325,80 @@ export default function Snacks() {
             </div>
           </div>
 
-          {/* Right Column: Order Mode & Colleague Selector */}
+          {/* Right Column: Order Form */}
           <div className="order-summary-panel">
             <div className="card card-header-accent summary-card-full">
-              <h3>2. Choose Order Option</h3>
+              <h3>{isSoloMode ? '2. Order for Myself' : '2. Share with Colleague'}</h3>
 
               <form onSubmit={handlePlaceOrder} style={{ marginTop: '1.25rem' }}>
-                {/* Order Mode Toggle (if colleagues are available) */}
-                {colleagues.length > 0 ? (
-                  <div style={{ marginBottom: '1.25rem' }}>
-                    <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-text)', fontSize: '0.9rem' }}>
-                      Who is this order for?
-                    </label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                      <button
-                        type="button"
-                        onClick={() => setOrderMode('share')}
-                        style={{
-                          padding: '0.75rem',
-                          borderRadius: '8px',
-                          border: effectiveMode === 'share' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                          backgroundColor: effectiveMode === 'share' ? 'var(--color-primary-light)' : 'var(--color-surface)',
-                          color: effectiveMode === 'share' ? 'var(--color-primary)' : 'var(--color-text)',
-                          fontWeight: effectiveMode === 'share' ? 700 : 500,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.4rem',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <Users size={18} />
-                        Share with Colleague
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setOrderMode('self')}
-                        style={{
-                          padding: '0.75rem',
-                          borderRadius: '8px',
-                          border: effectiveMode === 'self' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                          backgroundColor: effectiveMode === 'self' ? 'var(--color-primary-light)' : 'var(--color-surface)',
-                          color: effectiveMode === 'self' ? 'var(--color-primary)' : 'var(--color-text)',
-                          fontWeight: effectiveMode === 'self' ? 700 : 500,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.4rem',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <User size={18} />
-                        Order for Myself
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ marginBottom: '1.25rem', padding: '0.9rem 1rem', borderRadius: '8px', backgroundColor: 'hsla(38, 92%, 50%, 0.12)', border: '1px solid hsla(38, 92%, 50%, 0.3)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <Info size={20} color="hsl(38, 80%, 40%)" />
-                    <div>
-                      <strong style={{ display: 'block', fontSize: '0.9rem', color: 'hsl(38, 80%, 35%)' }}>
-                        No colleagues available to share
-                      </strong>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-                        All other employees have already placed snack orders today. You can place an order directly for yourself!
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Sub-Panel: Share Mode vs Self Mode */}
-                {effectiveMode === 'share' ? (
+                {!isSoloMode ? (
+                  /* When colleagues exist: ONLY Colleague Dropdown is shown */
                   <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                     <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-text)' }}>
                       Select Colleague (Employee 2)
                     </label>
-                    <select
-                      className="form-control"
-                      value={selectedColleagueId}
-                      onChange={(e) => setSelectedColleagueId(e.target.value)}
-                      disabled={!windowInfo.isOpen}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem 1rem',
-                        borderRadius: '8px',
-                        border: '1px solid var(--color-border)',
-                        backgroundColor: 'var(--color-background)',
-                        color: 'var(--color-text)',
-                        fontSize: '0.95rem'
-                      }}
-                    >
-                      {colleagues.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        className="form-control"
+                        value={selectedColleagueId}
+                        onChange={(e) => setSelectedColleagueId(e.target.value)}
+                        disabled={!windowInfo.isOpen}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem 1rem',
+                          borderRadius: '8px',
+                          border: '1px solid var(--color-border)',
+                          backgroundColor: 'var(--color-background)',
+                          color: 'var(--color-text)',
+                          fontSize: '0.95rem'
+                        }}
+                      >
+                        {colleagues.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 ) : (
-                  <div style={{ marginBottom: '1.5rem', padding: '1rem', borderRadius: '8px', backgroundColor: 'var(--color-background)', border: '1px solid var(--color-border)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                      <span style={{ fontSize: '1.25rem' }}>👤</span>
-                      <strong style={{ color: 'var(--color-text)' }}>Solo Snack Order (1 Qty)</strong>
+                  /* When NO colleagues available (empty list): Order for Myself shown */
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <div style={{ marginBottom: '1rem', padding: '0.9rem 1rem', borderRadius: '8px', backgroundColor: 'hsla(38, 92%, 50%, 0.12)', border: '1px solid hsla(38, 92%, 50%, 0.3)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Info size={20} color="hsl(38, 80%, 40%)" />
+                      <div>
+                        <strong style={{ display: 'block', fontSize: '0.9rem', color: 'hsl(38, 80%, 35%)' }}>
+                          No colleagues available to share
+                        </strong>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
+                          All other employees have already placed snack orders today. You can place an order directly for yourself!
+                        </span>
+                      </div>
                     </div>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                      Item: <strong>{selectedSnack ? selectedSnack.name : 'Selected Item'}</strong> • Qty: <strong>1</strong> • Amount: <strong>₹{selectedSnack ? Number(selectedSnack.price).toFixed(2) : '0.00'}</strong>
-                    </p>
+
+                    <div style={{ padding: '1rem', borderRadius: '8px', backgroundColor: 'var(--color-background)', border: '1px solid var(--color-border)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                        <span style={{ fontSize: '1.25rem' }}>👤</span>
+                        <strong style={{ color: 'var(--color-text)' }}>Solo Snack Order (1 Qty)</strong>
+                      </div>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                        Item: <strong>{selectedSnack ? selectedSnack.name : 'Selected Item'}</strong> • Qty: <strong>1</strong> • Amount: <strong>₹{selectedSnack ? Number(selectedSnack.price).toFixed(2) : '0.00'}</strong>
+                      </p>
+                    </div>
                   </div>
                 )}
 
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className={`btn btn-primary w-full order-submit-btn ${(!windowInfo.isOpen || submitting || !selectedSnack || (effectiveMode === 'share' && !selectedColleagueId)) ? 'btn-disabled' : ''}`}
-                  disabled={!windowInfo.isOpen || submitting || !selectedSnack || (effectiveMode === 'share' && !selectedColleagueId)}
+                  className={`btn btn-primary w-full order-submit-btn ${(!windowInfo.isOpen || submitting || !selectedSnack || (!isSoloMode && !selectedColleagueId)) ? 'btn-disabled' : ''}`}
+                  disabled={!windowInfo.isOpen || submitting || !selectedSnack || (!isSoloMode && !selectedColleagueId)}
                   style={{ height: '52px', fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '1.5rem' }}
                 >
                   <Cookie size={20} />
                   {submitting 
                     ? 'Placing Order...' 
-                    : effectiveMode === 'self' 
+                    : isSoloMode 
                       ? 'Place Snack Order for Myself' 
                       : 'Share & Place Snack Order'}
                 </button>

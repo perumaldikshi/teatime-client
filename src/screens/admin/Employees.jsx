@@ -58,7 +58,7 @@ export default function Employees() {
       alert(res.data.message || 'Employee account removed.');
       fetchEmployees();
     } catch (err) {
-      alert(err.message || 'Failed to delete employee account.');
+      alert(err.response?.data?.error || err.message || 'Failed to delete employee account.');
     }
   };
 
