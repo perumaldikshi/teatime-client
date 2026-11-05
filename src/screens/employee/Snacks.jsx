@@ -308,6 +308,15 @@ export default function Snacks() {
                               <span className="badge badge-purple" style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem' }}>
                                 👥 Colleague Item
                               </span>
+                              {snack.item_type === 'drink' ? (
+                                <span className="badge badge-info" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
+                                  🍵 Drink
+                                </span>
+                              ) : (
+                                <span className="badge badge-warning" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
+                                  🍪 Snack
+                                </span>
+                              )}
                               <span className="badge badge-success" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
                                 Available
                               </span>

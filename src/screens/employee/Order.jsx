@@ -173,6 +173,15 @@ export default function Order() {
                           <span className={`badge ${item.is_available !== false ? 'badge-success' : 'badge-error'}`} style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
                             {item.is_available !== false ? 'Available' : 'Unavailable'}
                           </span>
+                          {item.item_type === 'snack' ? (
+                            <span className="badge badge-warning" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginLeft: '0.35rem' }}>
+                              🍪 Snack
+                            </span>
+                          ) : (
+                            <span className="badge badge-info" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', marginLeft: '0.35rem' }}>
+                              🍵 Drink
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -76,8 +76,9 @@ export default function TeaMaster() {
     setName('');
     setPrice('');
     setIsAvailable(true);
-    setItemType('drink');
-    setCategory('common');
+    // If currently filtered by Colleague Items tab, default to colleague
+    setCategory(filterType === 'colleague' ? 'colleague' : 'common');
+    setItemType(filterType === 'snack' || filterType === 'snacks' ? 'snack' : 'drink');
     setFormError('');
     setModalVisible(true);
   };
