@@ -127,7 +127,7 @@ export default function Order() {
         </div>
       )}
 
-      {/* Snacks Option Banner */}
+      {/* Hidden temporarily: Snacks / Colleague Share Option Banner
       <div className="card" style={{ marginTop: '1.5rem', padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <span style={{ fontSize: '1.5rem' }}>🍪</span>
@@ -146,6 +146,7 @@ export default function Order() {
           Go to Snacks Option 🍪
         </button>
       </div>
+      */}
 
       <div className="order-container grid grid-cols-2 gap-lg" style={{ marginTop: '2rem' }}>
         {/* Item Selection List */}

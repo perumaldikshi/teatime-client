@@ -201,7 +201,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Today's Shared Snack Card */}
+        {/* Hidden temporarily: Today's Shared Snack Card
         <div className="card card-header-accent" style={{ gridColumn: 'span 2' }}>
           <div className="flex-between">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -248,6 +248,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+        */}
       </div>
 
       {/* Quick Order Shortcuts */}
@@ -256,7 +257,7 @@ export default function Dashboard() {
           <h2>Quick Order</h2>
           <p className="section-subtitle">Place a 1-quantity order with a single click</p>
           <div className="grid grid-cols-4 gap-md" style={{ marginTop: '1rem' }}>
-            {teaItems.map((item) => (
+            {teaItems.filter(item => (item.category || 'common') === 'common').map((item) => (
               <div 
                 key={item.id} 
                 className="card quick-order-card"

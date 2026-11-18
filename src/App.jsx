@@ -83,6 +83,7 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      {/* Hidden temporarily: Colleague & Shared Snacks Route
       <Route 
         path="/snacks" 
         element={
@@ -91,6 +92,7 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      */}
       <Route 
         path="/all-orders" 
         element={
